@@ -1,0 +1,375 @@
+We are going generate a simple CRUD application with production-friendly structure. I would generate the code module-by-module.
+
+Prompt 1
+Create a Python FastAPI project for an Infrastructure Service Portal.
+
+Requirements:
+
+- Python 3.12
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Pydantic
+- JWT Authentication
+- Alembic migrations
+- Redis support (optional)
+
+Project structure:
+
+app/
+├── main.py
+├── database.py
+├── models/
+├── schemas/
+├── api/
+├── services/
+├── auth/
+├── workers/
+├── utils/
+└── config.py
+
+Requirements:
+
+- Keep code simple and easy to understand.
+- Avoid complex design patterns.
+- Build for learning Kubernetes, not software architecture.
+- Include Dockerfile.
+- Include requirements.txt.
+- Include health endpoints:
+    /health
+    /ready
+    /metrics
+
+Generate complete source code.
+
+Create a FastAPI authentication module.
+
+Requirements:
+
+Tables:
+
+users
+roles
+
+A user contains:
+
+id
+username
+password_hash
+role
+created_date
+
+Features:
+
+- Login
+- Logout
+- JWT token generation
+- JWT validation
+
+Endpoints:
+
+POST /login
+
+POST /logout
+
+GET /me
+
+Roles:
+
+ADMIN
+APPROVER
+OPERATOR
+USER
+
+Requirements:
+
+- Use bcrypt password hashing.
+- Keep implementation simple.
+- Store user details in PostgreSQL.
+- Use SQLAlchemy models.
+- Return JWT token on successful login.
+
+Generate all source code.
+
+Create a FastAPI module for request management.
+
+Create a PostgreSQL table:
+
+requests
+
+Columns:
+
+id
+title
+description
+request_type
+status
+created_by
+created_date
+updated_date
+
+Request types:
+
+FIREWALL
+SSL
+SFTP
+SERVER_ACCESS
+DNS
+
+Statuses:
+
+SUBMITTED
+APPROVED
+REJECTED
+COMPLETED
+
+Endpoints:
+
+POST /requests
+
+GET /requests
+
+GET /requests/{id}
+
+PUT /requests/{id}
+
+DELETE /requests/{id}
+
+Requirements:
+
+- Use SQLAlchemy.
+- Use Pydantic schemas.
+- Keep implementation simple.
+- Return clear API responses.
+
+Generate complete code.
+
+Create a FastAPI approval module.
+
+Table:
+
+approvals
+
+Columns:
+
+id
+request_id
+approved_by
+approval_status
+comments
+approved_date
+
+Approval statuses:
+
+APPROVED
+REJECTED
+
+Endpoints:
+
+POST /requests/{id}/approve
+
+POST /requests/{id}/reject
+
+Requirements:
+
+- Update request status automatically.
+- Write approval records.
+- Keep business logic simple.
+- Use SQLAlchemy.
+
+Generate complete source code.
+
+Create an audit logging module.
+
+Table:
+
+audit_log
+
+Columns:
+
+id
+username
+action
+entity_type
+entity_id
+timestamp
+
+Every API operation must write an audit record.
+
+Examples:
+
+LOGIN
+
+REQUEST_CREATED
+
+REQUEST_UPDATED
+
+REQUEST_APPROVED
+
+REQUEST_REJECTED
+
+Requirements:
+
+- Use SQLAlchemy.
+- Simple implementation.
+- Reusable audit service.
+
+Generate code.
+
+Create dashboard APIs.
+
+Endpoints:
+
+GET /dashboard
+
+Return:
+
+total_requests
+
+submitted_requests
+
+approved_requests
+
+rejected_requests
+
+completed_requests
+
+requests_by_type
+
+Requirements:
+
+- Use PostgreSQL aggregation queries.
+- Return JSON response.
+- Keep implementation simple.
+
+Generate code.
+Create a background notification worker.
+
+Table:
+
+notifications
+
+Columns:
+
+id
+request_id
+recipient
+message
+status
+created_date
+
+Statuses:
+
+PENDING
+SENT
+
+Worker must:
+
+- Check pending notifications every 30 seconds.
+- Mark notification as SENT.
+- Log all actions.
+
+No actual email sending required.
+
+Generate Python worker code.
+
+Add health monitoring endpoints.
+
+Endpoints:
+
+GET /health
+GET /ready
+GET /metrics
+
+Requirements:
+
+/health
+Return application status
+
+/ready
+Validate PostgreSQL connectivity
+
+/metrics
+Expose Prometheus metrics
+
+Metrics:
+
+http_requests_total
+
+request_creation_total
+
+login_total
+
+Generate complete code.
+
+
+----------------------------
+
+Structure
+
+  app/
+  ├── main.py              # FastAPI app, lifespan runs notification worker, metrics middleware
+  ├── config.py            # pydantic-settings (DB, JWT, Redis)
+  ├── database.py          # SQLAlchemy engine + session
+  ├── models/              # users, requests, approvals, audit_log, notifications
+  ├── schemas/             # Pydantic v2 request/response shapes
+  ├── api/                 # routers: auth, requests, approvals, dashboard, health
+  ├── services/            # business logic + audit_service (used by every mutation)
+  ├── auth/                # JWT, bcrypt, role guards, in-memory blocklist
+  ├── workers/             # async notification worker (30s poll loop)
+  └── utils/               # Prometheus counters/histogram
+  alembic/                 # env.py + 0001_initial.py migration
+  Dockerfile, requirements.txt, .env.example, .gitignore
+
+  Endpoints
+
+  ┌─────────┬────────────────────────┬────────────────┬───────────────────────────────────────────┐
+  │ Method  │          Path          │      Auth      │                   Notes                   │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ POST    │ /login                 │ –              │ bcrypt verify → JWT, audit LOGIN          │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ POST    │ /logout                │ bearer         │ revokes token (in-memory; swap to Redis)  │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET     │ /me                    │ bearer         │ current user                              │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ POST    │ /requests              │ bearer         │ writes notification row + audit           │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET     │ /requests              │ bearer         │ filter by status, request_type            │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET/PUT │ /requests/{id}         │ bearer         │                                           │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ DELETE  │ /requests/{id}         │ ADMIN/OPERATOR │                                           │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ POST    │ /requests/{id}/approve │ ADMIN/APPROVER │ flips status, writes notification + audit │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ POST    │ /requests/{id}/reject  │ ADMIN/APPROVER │ same                                      │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET     │ /dashboard             │ bearer         │ aggregated counts + by-type               │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET     │ /health                │ –              │ liveness                                  │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET     │ /ready                 │ –              │ probes PostgreSQL                         │
+  ├─────────┼────────────────────────┼────────────────┼───────────────────────────────────────────┤
+  │ GET     │ /metrics               │ –              │ Prometheus exposition                     │
+  └─────────┴────────────────────────┴────────────────┴───────────────────────────────────────────┘
+
+  Decisions worth flagging
+
+  - Roles as enum column on users instead of a separate roles table — keeps the schema flat for K8s learning; switch to a join table when you need role-permission granularity.
+  - Token blocklist is in-memory in app/auth/blocklist.py — fine for a single replica; for multi-pod swap to Redis (settings.ENABLE_REDIS=True).
+  - Notification worker runs in the API process via lifespan — for real K8s learning, move it to its own deployment so you can exercise separate Deployments, probes, and HPA independently.
+  - Alembic is configured but you'll need to run alembic upgrade head (the Dockerfile doesn't auto-migrate; the pod should do it on init, e.g. an init-container or a Job).
+
+  Next steps if you want them: a docker-compose.yml with Postgres + the app, Kubernetes manifests (Deployment/Service/Ingress/ConfigMap), or a separate worker Deployment manifest.
+
+
+-----
+
+podman --storage-driver=vfs run -d --name postgres \
+  -e POSTGRES_USER=portaluser \
+  -e POSTGRES_PASSWORD=portalpass \
+  -e POSTGRES_DB=serviceportal \
+  -p 5432:5432 \
+  docker.io/library/postgres:16
+  
+  
