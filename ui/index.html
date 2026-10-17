@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ServiceOps Portal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header id="app-header" hidden>
+    <div class="brand">ServiceOps Portal</div>
+    <nav>
+      <a href="#/dashboard">Dashboard</a>
+      <a href="#/requests">Requests</a>
+      <a href="#/users" id="nav-users" hidden>Users</a>
+    </nav>
+    <div class="user-info">
+      <span id="user-label"></span>
+      <button id="logout-btn" type="button">Logout</button>
+    </div>
+  </header>
+  <main id="view"></main>
+  <div id="toast" hidden></div>
+  <script src="app.js" defer></script>
+</body>
+</html>

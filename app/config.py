@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://redis:6379/0"
     ENABLE_REDIS: bool = False
 
+    UI_ORIGINS: str = "*"
+
     class Config:
         env_file = ".env"
 

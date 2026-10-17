@@ -5,9 +5,10 @@ import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api import approvals, auth, dashboard, health, requests as requests_api
+from app.api import approvals, auth, dashboard, health, requests as requests_api, users
 from app.config import settings
 from app.utils.metrics import http_request_duration_seconds, http_requests_total
 from app.workers.notification_worker import run_worker
@@ -40,6 +41,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_origins_raw = settings.UI_ORIGINS or "*"
+_origins_list = [o.strip() for o in _origins_raw.split(",") if o.strip()] or ["*"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins_list,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.middleware("http")
 async def metrics_middleware(request: Request, call_next):
@@ -70,3 +81,4 @@ app.include_router(auth.router)
 app.include_router(requests_api.router)
 app.include_router(approvals.router)
 app.include_router(dashboard.router)
+app.include_router(users.router)
