@@ -1,0 +1,11 @@
+docker network create serviceops-net
+
+docker run --name postgres \
+  --network serviceops-net \
+  -e POSTGRES_USER=serviceops \
+  -e POSTGRES_PASSWORD=serviceops \
+  -e POSTGRES_DB=serviceops \
+  -p 5432:5432 \
+  -d postgres:latest
+
+docker run -d --network serviceops-net -p 8000:8000 serviceportal:1
