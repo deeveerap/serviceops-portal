@@ -7,11 +7,36 @@ from app.auth.security import create_access_token, verify_password
 from app.auth.blocklist import revoke
 from app.database import get_db
 from app.models import User
-from app.schemas.user import LoginResponse, LogoutResponse, UserOut
+from app.schemas.user import LoginResponse, LogoutResponse, SignupRequest, UserOut
+from app.services import user_service
 from app.services.audit_service import record as audit_record
 from app.utils.metrics import login_total
 
 router = APIRouter(tags=["auth"])
+
+
+@router.post("/signup", response_model=UserOut, status_code=201)
+def signup(
+    payload: SignupRequest,
+    db: Session = Depends(get_db),
+):
+    user = user_service.create_user_internal(
+        db,
+        user_service.UserCreateInternal(
+            username=payload.username,
+            password=payload.password,
+            role="USER",
+        ),
+    )
+    audit_record(
+        db,
+        username=user.username,
+        action="USER_SIGNUP",
+        entity_type="user",
+        entity_id=user.id,
+    )
+    db.commit()
+    return user
 
 
 @router.post("/login", response_model=LoginResponse)

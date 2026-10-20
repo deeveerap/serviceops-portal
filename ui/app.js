@@ -129,6 +129,8 @@ function renderLogin(view) {
   form.appendChild(el("label", null, "Password", el("input", { name: "password", type: "password", required: true, autocomplete: "current-password" })));
   form.appendChild(el("button", { type: "submit" }, "Sign in"));
   card.appendChild(form);
+  card.appendChild(el("div", { class: "muted", style: "margin-top:12px;" },
+    el("a", { href: "#/signup" }, "Create an account")));
   view.appendChild(card);
 
   async function onSubmit(ev) {
@@ -143,6 +145,39 @@ function renderLogin(view) {
       });
       setToken(data.access_token);
       location.hash = "#/dashboard";
+    } catch (e) {
+      err.textContent = e.message;
+      err.hidden = false;
+    }
+  }
+}
+
+function renderSignup(view) {
+  clear(view);
+  const card = el("div", { class: "card" });
+  card.appendChild(el("h2", null, "Create account"));
+  const err = el("div", { class: "error", id: "signup-err", hidden: true });
+  card.appendChild(err);
+  const form = el("form", { onsubmit: onSubmit });
+  form.appendChild(el("label", null, "Username", el("input", { name: "username", required: true, autocomplete: "username", minlength: "3" })));
+  form.appendChild(el("label", null, "Password", el("input", { name: "password", type: "password", required: true, autocomplete: "new-password", minlength: "6" })));
+  form.appendChild(el("button", { type: "submit" }, "Sign up"));
+  card.appendChild(form);
+  card.appendChild(el("div", { class: "muted", style: "margin-top:12px;" },
+    el("a", { href: "#/login" }, "Back to sign in")));
+  view.appendChild(card);
+
+  async function onSubmit(ev) {
+    ev.preventDefault();
+    const fd = new FormData(form);
+    err.hidden = true;
+    try {
+      await apiFetch("/signup", {
+        method: "POST",
+        body: { username: fd.get("username"), password: fd.get("password") },
+      });
+      toast("Account created — please sign in");
+      location.hash = "#/login";
     } catch (e) {
       err.textContent = e.message;
       err.hidden = false;
@@ -429,10 +464,11 @@ async function route() {
   updateHeader();
   const view = document.getElementById("view");
   const hash = location.hash || "#/dashboard";
-  if (!getToken() && hash !== "#/login") { location.hash = "#/login"; return; }
-  if (getToken() && hash === "#/login") { location.hash = "#/dashboard"; return; }
+  if (!getToken() && hash !== "#/login" && hash !== "#/signup") { location.hash = "#/login"; return; }
+  if (getToken() && (hash === "#/login" || hash === "#/signup")) { location.hash = "#/dashboard"; return; }
 
   if (hash === "#/login") return renderLogin(view);
+  if (hash === "#/signup") return renderSignup(view);
   if (hash === "#/dashboard" || hash === "" || hash === "#") return renderDashboard(view);
   if (hash === "#/requests") return renderRequestsList(view);
   if (hash === "#/requests/new") return renderRequestNew(view);

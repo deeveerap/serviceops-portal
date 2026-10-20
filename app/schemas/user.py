@@ -29,5 +29,10 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class SignupRequest(BaseModel):
+    username: str
+    password: str
+
+
 class LogoutResponse(BaseModel):
     message: str
