@@ -8,6 +8,17 @@ docker run --name postgres \
   -p 5432:5432 \
   -d postgres:latest
 
+sh create_table.sh
+
 docker build -t serviceportal:1 .
 
+cd ui
+docker build -t serviceportal-ui:1 .
+
+
 docker run -d --network serviceops-net -p 8000:8000 serviceportal:1
+docker run -d --network serviceops-net  -p 8001:80 serviceportal-ui:1
+
+
+
+
