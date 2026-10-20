@@ -8,4 +8,6 @@ docker run --name postgres \
   -p 5432:5432 \
   -d postgres:latest
 
+docker build -t serviceportal:1 .
+
 docker run -d --network serviceops-net -p 8000:8000 serviceportal:1
