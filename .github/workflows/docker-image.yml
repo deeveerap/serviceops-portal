@@ -16,8 +16,13 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag serviceportal-api:$(date +%s)
+      run: |
+       date_tag=$(date +%s)
+       docker build . --file Dockerfile --tag serviceportal-api:${date_tag}
+       docker push deeveera/serviceopsportal/serviceportal-api:${date_tag}
 
     - name: Build UI Image
-      run: docker build . --file Dockerfile --tag serviceportal-ui:$(date +%s)
       working-directory: ./ui
+      run: |
+        docker build . --file Dockerfile --tag serviceportal-ui:$(date +%s)
+      
