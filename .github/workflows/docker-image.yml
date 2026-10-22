@@ -14,15 +14,24 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Generate Tag Value
+      id: date
+      run: echo "date_tag=$(date +%s)" >> $GITHUB_OUTPUT
+
+    - name: Docker Login
+      uses: docker/login-action@v3
+      with:
+         username: ${{ secrets.DOCKER_USERNAME }}
+         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: Build the Docker image
       run: |
-       date_tag=$(date +%s)
-       docker build . --file Dockerfile --tag deeveera/serviceopsportal/serviceportal-api:${date_tag}
-       docker push deeveera/serviceopsportal/serviceportal-api:${date_tag}
+       docker build . --file Dockerfile --tag deeveera/serviceopsportal/serviceportal-api:${{ steps.date.outputs.date_tag }}
+       docker push deeveera/serviceopsportal/serviceportal-api:${{ steps.date.outputs.date_tag }}
 
     - name: Build UI Image
       working-directory: ./ui
       run: |
-        docker build . --file Dockerfile --tag serviceportal-ui:$(date +%s)
+        docker build . --file Dockerfile --tag serviceportal-ui:${{ steps.date.outputs.date_tag }}
       
